@@ -1,19 +1,20 @@
 //
 //  SecureVault.swift
+//  TwinChatAI
 //
 //  Created by Eon Fluxor on 1/4/24.
 //
 
-import Foundation
 import CryptoKit
+import Foundation
 import Security
 
 public class SecureVault {
-    private var namespace="secure"
+    private var namespace = "secureVault"
     private var encryptionKey: SymmetricKey?
     private let actor = SecureVaultActor()
-    
-    public init(namespace:String? = nil) {
+
+    public init(namespace: String? = nil) {
         self.namespace = namespace ?? self.namespace
         if let storedKey = retrieveKeyFromKeychain() {
             encryptionKey = SymmetricKey(data: storedKey)
@@ -26,8 +27,7 @@ public class SecureVault {
     }
 }
 
-
-public extension SecureVault{
+public extension SecureVault {
     func set(key: String, value: String) async {
         guard let encryptionKey = encryptionKey, let data = value.data(using: .utf8) else {
             assertionFailure("Encryption key or value is invalid")
@@ -40,7 +40,7 @@ public extension SecureVault{
             assertionFailure("Encryption failed: \(error)")
         }
     }
-    
+
     func get(key: String) async -> String? {
         guard let encryptionKey = encryptionKey else {
             assertionFailure("Encryption key not found")
@@ -58,8 +58,24 @@ public extension SecureVault{
         }
     }
 }
-    
-extension SecureVault{
+
+extension SecureVault {
+    func setKey(_ key: String, value: String, completion: @escaping () -> Void) {
+        Task {
+            await set(key: key, value: value)
+            completion()
+        }
+    }
+
+    func getKey(_ key: String, completion: @escaping (String?) -> Void) {
+        Task {
+            let result = await get(key: key)
+            completion(result)
+        }
+    }
+}
+
+extension SecureVault {
     private func encrypt(_ data: Data, using key: SymmetricKey) throws -> Data {
         do {
             let sealedBox = try AES.GCM.seal(data, using: key)
@@ -72,7 +88,7 @@ extension SecureVault{
             throw EncryptionError.encryptionFailed(error.localizedDescription)
         }
     }
-    
+
     private func decrypt(_ data: Data, using key: SymmetricKey) throws -> Data {
         do {
             let box = try AES.GCM.SealedBox(combined: data)
@@ -82,34 +98,34 @@ extension SecureVault{
             throw DecryptionError.decryptionFailed(error.localizedDescription)
         }
     }
-    
-    private var secureFilePath:URL{
+
+    private var secureFilePath: URL {
         getDocumentsDirectory().appendingPathComponent(secureFilename)
     }
-    
-    private var keychainKey:String{
+
+    private var keychainKey: String {
         "com.secureVault.\(namespace)"
     }
-    
-    private var secureFilename:String{
-        "database.db"
+
+    private var secureFilename: String {
+        "\(namespace).db"
     }
-    
+
     private func storeKeyToKeychain(_ data: Data) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassKey,
             kSecAttrApplicationTag as String: keychainKey,
-            kSecValueData as String: data
+            kSecValueData as String: data,
         ]
         SecItemAdd(query as CFDictionary, nil)
     }
-    
+
     private func retrieveKeyFromKeychain() -> Data? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassKey,
             kSecAttrApplicationTag as String: keychainKey,
             kSecReturnData as String: kCFBooleanTrue!,
-            kSecMatchLimit as String: kSecMatchLimitOne
+            kSecMatchLimit as String: kSecMatchLimitOne,
         ]
         var item: CFTypeRef?
         if SecItemCopyMatching(query as CFDictionary, &item) == noErr {
@@ -117,8 +133,8 @@ extension SecureVault{
         }
         return nil
     }
-    
-    private func dataStore()->EncryptedStore{
+
+    private func dataStore() -> EncryptedStore {
         let filePath = secureFilePath
         do {
             let data = try Data(contentsOf: filePath)
@@ -126,10 +142,10 @@ extension SecureVault{
             return store
         } catch {
             print("Failed to red from disk: \(error)")
-            return EncryptedStore(store:[:])
+            return EncryptedStore(store: [:])
         }
     }
-    
+
     @discardableResult
     private func write(key: String, data: Data) async -> Bool {
         let filePath = secureFilePath
@@ -144,14 +160,13 @@ extension SecureVault{
             return false
         }
     }
-    
+
     private func read(key: String) async -> Data? {
         dataStore().store[key]
     }
-    
+
     private func getDocumentsDirectory() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0]
     }
 }
-
