@@ -103,7 +103,7 @@ extension SecureVault {
             throw EncryptionError.encryptionFailed(error.localizedDescription)
         }
     }
-
+    
     private func decrypt(_ data: Data, using key: SymmetricKey) throws -> Data {
         do {
             let box = try AES.GCM.SealedBox(combined: data)
@@ -113,18 +113,20 @@ extension SecureVault {
             throw DecryptionError.decryptionFailed(error.localizedDescription)
         }
     }
-
+    
     private var secureFilePath: URL {
         getDocumentsDirectory().appendingPathComponent(secureFilename)
     }
-
+    
     private var keychainKey: String {
         "com.secureVault.\(namespace)"
     }
-
+    
     private var secureFilename: String {
         "\(namespace).db"
     }
+}
+extension SecureVault{
 
     private func storeKeyToKeychain(_ data: Data) {
         let query: [String: Any] = [
@@ -192,7 +194,7 @@ extension SecureVault {
     }
 
     private func getDocumentsDirectory() -> URL {
-        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        let paths = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
         return paths[0]
     }
 }
