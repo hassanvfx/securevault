@@ -27,6 +27,22 @@ public class SecureVault {
 }
 
 public extension SecureVault {
+    func encrypt(data: Data) throws -> Data {
+        guard let encryptionKey else{
+            assertionFailure()
+            return Data()
+        }
+        return try encrypt(data, using: encryptionKey)
+    }
+
+    func decrypt(data: Data) throws -> Data {
+        guard let encryptionKey else{
+            assertionFailure()
+            return Data()
+        }
+        return try decrypt(data, using: encryptionKey)
+    }
+    
     func set(key: String, value: String) async {
         guard let encryptionKey = encryptionKey, let data = value.data(using: .utf8) else {
             assertionFailure("Encryption key or value is invalid")
