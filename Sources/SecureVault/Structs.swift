@@ -22,15 +22,4 @@ extension SecureVault {
         case decryptionFailed(String)
     }
 
-    actor SecureVaultActor {
-        private var store: [String: Data] = [:]
-
-        func set(key: String, value: Data) {
-            store[key] = value
-        }
-
-        func get(key: String) -> Data? {
-            store[key]
-        }
-    }
 }

@@ -12,7 +12,6 @@ import Security
 public class SecureVault {
     private var namespace = "secureVault"
     private var encryptionKey: SymmetricKey?
-    private let actor = SecureVaultActor()
 
     public init(namespace: String? = nil) {
         self.namespace = namespace ?? self.namespace
@@ -35,7 +34,7 @@ public extension SecureVault {
         }
         do {
             let encryptedData = try encrypt(data, using: encryptionKey)
-            await actor.set(key: key, value: encryptedData)
+            await write(key: key, data: encryptedData)
         } catch {
             assertionFailure("Encryption failed: \(error)")
         }
@@ -47,7 +46,7 @@ public extension SecureVault {
             return nil
         }
         do {
-            if let encryptedData = await actor.get(key: key) {
+            if let encryptedData = await read(key: key) {
                 let decryptedData = try decrypt(encryptedData, using: encryptionKey)
                 return String(data: decryptedData, encoding: .utf8)
             }
