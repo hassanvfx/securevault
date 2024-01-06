@@ -156,7 +156,7 @@ extension SecureVault {
             assertionFailure()
             return false
         }
-        
+
         let filePath = secureFilePath
         var dataStore = dataStore()
         dataStore.store[key] = data

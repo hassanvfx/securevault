@@ -21,5 +21,4 @@ extension SecureVault {
         case invalidData
         case decryptionFailed(String)
     }
-
 }
