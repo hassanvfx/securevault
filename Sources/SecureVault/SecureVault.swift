@@ -134,10 +134,15 @@ extension SecureVault {
     }
 
     private func dataStore() -> EncryptedStore {
+        guard let encryptionKey else {
+            assertionFailure()
+            return EncryptedStore(store: [:])
+        }
         let filePath = secureFilePath
         do {
             let data = try Data(contentsOf: filePath)
-            let store = try JSONDecoder().decode(EncryptedStore.self, from: data)
+            let decryptedData = try decrypt(data, using: encryptionKey)
+            let store = try JSONDecoder().decode(EncryptedStore.self, from: decryptedData)
             return store
         } catch {
             print("Failed to red from disk: \(error)")
@@ -147,12 +152,18 @@ extension SecureVault {
 
     @discardableResult
     private func write(key: String, data: Data) async -> Bool {
+        guard let encryptionKey else {
+            assertionFailure()
+            return false
+        }
+        
         let filePath = secureFilePath
         var dataStore = dataStore()
         dataStore.store[key] = data
         do {
             let encodedData = try JSONEncoder().encode(dataStore)
-            try encodedData.write(to: filePath)
+            let encryptedData = try encrypt(encodedData, using: encryptionKey)
+            try encryptedData.write(to: filePath)
             return true
         } catch {
             print("Failed to write to disk: \(error)")
