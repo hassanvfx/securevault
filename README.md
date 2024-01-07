@@ -1,6 +1,9 @@
 
 # SecureVault
 
+![image](https://github.com/hassanvfx/securevault/assets/425926/d599c4a1-37a2-4152-8994-805c8c6b3814)
+
+
 SecureVault is a Swift library designed to provide fully encrypted disk storage for iOS applications. It leverages the robustness of Apple's Keychain services to enhance the security of data stored on the device. The library offers a simple Key-Value interface for easy integration with existing projects.
 
 ## Features
