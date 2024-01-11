@@ -12,7 +12,9 @@ SecureVault is a Swift library designed to provide fully encrypted disk storage 
 - **Dynamic Key Generation**: The encryption key is dynamically generated at installation time and securely stored in the iOS Keychain.
 - **Keychain Stored Key**: The library utilizes the Keychain to store the encryption key, ensuring it's never written to any unsafe location.
 - **Runtime Key Exposure**: The encryption key is only exposed during runtime, minimizing the risk of key compromise.
-
+- **AES.GCM + 256 SecureKey Encryption** As suggested by [Dave Poireir](https://www.linkedin.com/in/dave-poirier-a9b25a9/)
+- **Swift Actor for Tread Safety** As suggested by [Dave Poireir](https://www.linkedin.com/in/dave-poirier-a9b25a9/)
+  
 ## Usage
 
 To use SecureVault in your project, import the library and initialize it:
