@@ -10,13 +10,12 @@ import Foundation
 import Security
 
 public actor SecureVault {
-    private nonisolated let namespace:String
+    private nonisolated let namespace: String
     private nonisolated let encryptionKey: SymmetricKey
-    
-    
+
     public init(namespace: String? = nil) {
         self.namespace = namespace ?? "secureVault"
-        let storeKeyToKeychain:(String, Data)->Void = { key,data in
+        let storeKeyToKeychain: (String, Data) -> Void = { key, data in
             let query: [String: Any] = [
                 kSecClass as String: kSecClassKey,
                 kSecAttrApplicationTag as String: key,
@@ -24,7 +23,7 @@ public actor SecureVault {
             ]
             SecItemAdd(query as CFDictionary, nil)
         }
-        let retrieveKeyFromKeychain:(String) -> Data? = { key in
+        let retrieveKeyFromKeychain: (String) -> Data? = { key in
             let query: [String: Any] = [
                 kSecClass as String: kSecClassKey,
                 kSecAttrApplicationTag as String: key,
@@ -47,7 +46,7 @@ public actor SecureVault {
             encryptionKey = newKey
         }
     }
-    
+
     private var secureFilename: String {
         "\(namespace).db"
     }
@@ -55,15 +54,13 @@ public actor SecureVault {
 
 public extension SecureVault {
     func encrypt(data: Data) throws -> Data {
-        
-         try encrypt(data, using: encryptionKey)
+        try encrypt(data, using: encryptionKey)
     }
-    
+
     func decrypt(data: Data) throws -> Data {
-        
-         try decrypt(data, using: encryptionKey)
+        try decrypt(data, using: encryptionKey)
     }
-    
+
     func set(key: String, value: String) async {
         guard let data = value.data(using: .utf8) else {
             assertionFailure("Value is invalid")
@@ -76,9 +73,8 @@ public extension SecureVault {
             assertionFailure("Encryption failed: \(error)")
         }
     }
-    
+
     func get(key: String) async -> String? {
-       
         do {
             if let encryptedData = await read(key: key) {
                 let decryptedData = try decrypt(encryptedData, using: encryptionKey)
@@ -99,7 +95,7 @@ extension SecureVault {
             completion()
         }
     }
-    
+
     func getKey(_ key: String, completion: @escaping (String?) -> Void) {
         Task {
             let result = await get(key: key)
@@ -121,7 +117,7 @@ extension SecureVault {
             throw EncryptionError.encryptionFailed(error.localizedDescription)
         }
     }
-    
+
     private func decrypt(_ data: Data, using key: SymmetricKey) throws -> Data {
         do {
             let box = try AES.GCM.SealedBox(combined: data)
@@ -131,15 +127,13 @@ extension SecureVault {
             throw DecryptionError.decryptionFailed(error.localizedDescription)
         }
     }
-    
+
     private var secureFilePath: URL {
         getDocumentsDirectory().appendingPathComponent(secureFilename)
     }
-    
-   
 }
-extension SecureVault{
-    
+
+extension SecureVault {
 //    nonisolated  private func storeKeyToKeychain(_ data: Data) {
 //        let query: [String: Any] = [
 //            kSecClass as String: kSecClassKey,
@@ -148,7 +142,7 @@ extension SecureVault{
 //        ]
 //        SecItemAdd(query as CFDictionary, nil)
 //    }
-//    
+//
 //    nonisolated private func retrieveKeyFromKeychain() -> Data? {
 //        let query: [String: Any] = [
 //            kSecClass as String: kSecClassKey,
@@ -162,9 +156,8 @@ extension SecureVault{
 //        }
 //        return nil
 //    }
-    
+
     private func dataStore() -> EncryptedStore {
-       
         let filePath = secureFilePath
         do {
             let data = try Data(contentsOf: filePath)
@@ -176,11 +169,9 @@ extension SecureVault{
             return EncryptedStore(store: [:])
         }
     }
-    
+
     @discardableResult
     private func write(key: String, data: Data) async -> Bool {
-        
-        
         let filePath = secureFilePath
         var dataStore = dataStore()
         dataStore.store[key] = data
@@ -194,16 +185,16 @@ extension SecureVault{
             return false
         }
     }
-    
+
     private func read(key: String) async -> Data? {
         dataStore().store[key]
     }
-    
+
     private func getDocumentsDirectory() -> URL {
         let fileManager = FileManager.default
         let paths = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)
         let supportDirectory = paths[0]
-        
+
         // Check if the directory exists, if not, create it
         if !fileManager.fileExists(atPath: supportDirectory.path) {
             do {
@@ -212,7 +203,7 @@ extension SecureVault{
                 print("Error creating directory: \(error)")
             }
         }
-        
+
         return supportDirectory
     }
 }
